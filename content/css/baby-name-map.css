@@ -1,0 +1,29 @@
+.states {
+  fill: none;
+}
+
+.state_borders {
+  fill: none;
+  stroke: #fff;
+  stroke-linejoin: round;
+}
+
+.q-9 { fill:rgb(0,117,234); }
+.q-8 { fill:rgb(26,130,234); }
+.q-7 { fill:rgb(52,143,234); }
+.q-6 { fill:rgb(78,156,234); }
+.q-5 { fill:rgb(104,169,234); }
+.q-4 { fill:rgb(130,182,234); }
+.q-3 { fill:rgb(156,195,234); }
+.q-2 { fill:rgb(182,208,234); }
+.q-1 { fill:rgb(208,221,234); }
+.q0 { fill:rgb(234,234,234); }
+.q1 { fill:rgb(234,213,234); }
+.q2 { fill:rgb(234,192,234); }
+.q3 { fill:rgb(234,171,234); }
+.q4 { fill:rgb(234,150,234); }
+.q5 { fill:rgb(234,129,234); }
+.q6 { fill:rgb(234,108,234); }
+.q7 { fill:rgb(234,87,234); }
+.q8 { fill:rgb(234,66,234); }
+.q9 { fill:rgb(234,45,234); }

@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: http://ogp.me/ns# fb: https://www.facebook.com/2008/fbml">
+<head>
+    <title>Taking Advantage of Sparsity in the ALS-WR Algorithm - Ben Lindsay</title>
+    <!-- Using the latest rendering mode for IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+
+
+<style type="text/css">
+
+/*some stuff for output/input prompts*/
+div.cell{border:1px solid transparent;display:-webkit-box;-webkit-box-orient:vertical;-webkit-box-align:stretch;display:-moz-box;-moz-box-orient:vertical;-moz-box-align:stretch;display:box;box-orient:vertical;box-align:stretch;display:flex;flex-direction:column;align-items:stretch}div.cell.selected{border-radius:4px;border:thin #ababab solid}
+div.cell.edit_mode{border-radius:4px;border:thin #008000 solid}
+div.cell{width:100%;padding:5px 5px 5px 0;margin:0;outline:none}
+div.prompt{min-width:11ex;padding:.4em;margin:0;font-family:monospace;text-align:right;line-height:1.21429em}
+@media (max-width:480px){div.prompt{text-align:left}}div.inner_cell{display:-webkit-box;-webkit-box-orient:vertical;-webkit-box-align:stretch;display:-moz-box;-moz-box-orient:vertical;-moz-box-align:stretch;display:box;box-orient:vertical;box-align:stretch;display:flex;flex-direction:column;align-items:stretch;-webkit-box-flex:1;-moz-box-flex:1;box-flex:1;flex:1}
+div.input_area{border:1px solid #cfcfcf;border-radius:4px;background:#f7f7f7;line-height:1.21429em}
+div.prompt:empty{padding-top:0;padding-bottom:0}
+div.input{page-break-inside:avoid;display:-webkit-box;-webkit-box-orient:horizontal;-webkit-box-align:stretch;display:-moz-box;-moz-box-orient:horizontal;-moz-box-align:stretch;display:box;box-orient:horizontal;box-align:stretch;}
+div.inner_cell{width:90%;}
+div.input_area{border:1px solid #cfcfcf;border-radius:4px;background:#f7f7f7;}
+div.input_prompt{color:navy;border-top:1px solid transparent;}
+div.output_wrapper{margin-top:5px;position:relative;display:-webkit-box;-webkit-box-orient:vertical;-webkit-box-align:stretch;display:-moz-box;-moz-box-orient:vertical;-moz-box-align:stretch;display:box;box-orient:vertical;box-align:stretch;width:100%;}
+div.output_scroll{height:24em;width:100%;overflow:auto;border-radius:4px;-webkit-box-shadow:inset 0 2px 8px rgba(0, 0, 0, 0.8);-moz-box-shadow:inset 0 2px 8px rgba(0, 0, 0, 0.8);box-shadow:inset 0 2px 8px rgba(0, 0, 0, 0.8);}
+div.output_collapsed{margin:0px;padding:0px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-box-align:stretch;display:-moz-box;-moz-box-orient:vertical;-moz-box-align:stretch;display:box;box-orient:vertical;box-align:stretch;width:100%;}
+div.out_prompt_overlay{height:100%;padding:0px 0.4em;position:absolute;border-radius:4px;}
+div.out_prompt_overlay:hover{-webkit-box-shadow:inset 0 0 1px #000000;-moz-box-shadow:inset 0 0 1px #000000;box-shadow:inset 0 0 1px #000000;background:rgba(240, 240, 240, 0.5);}
+div.output_prompt{color:darkred;}
+
+a.anchor-link:link{text-decoration:none;padding:0px 20px;visibility:hidden;}
+h1:hover .anchor-link,h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link,h5:hover .anchor-link,h6:hover .anchor-link{visibility:visible;}
+/* end stuff for output/input prompts*/
+
+
+.highlight-ipynb .hll { background-color: #ffffcc }
+.highlight-ipynb  { background: #f8f8f8; }
+.highlight-ipynb .c { color: #408080; font-style: italic } /* Comment */
+.highlight-ipynb .err { border: 1px solid #FF0000 } /* Error */
+.highlight-ipynb .k { color: #008000; font-weight: bold } /* Keyword */
+.highlight-ipynb .o { color: #666666 } /* Operator */
+.highlight-ipynb .cm { color: #408080; font-style: italic } /* Comment.Multiline */
+.highlight-ipynb .cp { color: #BC7A00 } /* Comment.Preproc */
+.highlight-ipynb .c1 { color: #408080; font-style: italic } /* Comment.Single */
+.highlight-ipynb .cs { color: #408080; font-style: italic } /* Comment.Special */
+.highlight-ipynb .gd { color: #A00000 } /* Generic.Deleted */
+.highlight-ipynb .ge { font-style: italic } /* Generic.Emph */
+.highlight-ipynb .gr { color: #FF0000 } /* Generic.Error */
+.highlight-ipynb .gh { color: #000080; font-weight: bold } /* Generic.Heading */
+.highlight-ipynb .gi { color: #00A000 } /* Generic.Inserted */
+.highlight-ipynb .go { color: #888888 } /* Generic.Output */
+.highlight-ipynb .gp { color: #000080; font-weight: bold } /* Generic.Prompt */
+.highlight-ipynb .gs { font-weight: bold } /* Generic.Strong */
+.highlight-ipynb .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+.highlight-ipynb .gt { color: #0044DD } /* Generic.Traceback */
+.highlight-ipynb .kc { color: #008000; font-weight: bold } /* Keyword.Constant */
+.highlight-ipynb .kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
+.highlight-ipynb .kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
+.highlight-ipynb .kp { color: #008000 } /* Keyword.Pseudo */
+.highlight-ipynb .kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
+.highlight-ipynb .kt { color: #B00040 } /* Keyword.Type */
+.highlight-ipynb .m { color: #666666 } /* Literal.Number */
+.highlight-ipynb .s { color: #BA2121 } /* Literal.String */
+.highlight-ipynb .na { color: #7D9029 } /* Name.Attribute */
+.highlight-ipynb .nb { color: #008000 } /* Name.Builtin */
+.highlight-ipynb .nc { color: #0000FF; font-weight: bold } /* Name.Class */
+.highlight-ipynb .no { color: #880000 } /* Name.Constant */
+.highlight-ipynb .nd { color: #AA22FF } /* Name.Decorator */
+.highlight-ipynb .ni { color: #999999; font-weight: bold } /* Name.Entity */
+.highlight-ipynb .ne { color: #D2413A; font-weight: bold } /* Name.Exception */
+.highlight-ipynb .nf { color: #0000FF } /* Name.Function */
+.highlight-ipynb .nl { color: #A0A000 } /* Name.Label */
+.highlight-ipynb .nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
+.highlight-ipynb .nt { color: #008000; font-weight: bold } /* Name.Tag */
+.highlight-ipynb .nv { color: #19177C } /* Name.Variable */
+.highlight-ipynb .ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
+.highlight-ipynb .w { color: #bbbbbb } /* Text.Whitespace */
+.highlight-ipynb .mf { color: #666666 } /* Literal.Number.Float */
+.highlight-ipynb .mh { color: #666666 } /* Literal.Number.Hex */
+.highlight-ipynb .mi { color: #666666 } /* Literal.Number.Integer */
+.highlight-ipynb .mo { color: #666666 } /* Literal.Number.Oct */
+.highlight-ipynb .sb { color: #BA2121 } /* Literal.String.Backtick */
+.highlight-ipynb .sc { color: #BA2121 } /* Literal.String.Char */
+.highlight-ipynb .sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
+.highlight-ipynb .s2 { color: #BA2121 } /* Literal.String.Double */
+.highlight-ipynb .se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
+.highlight-ipynb .sh { color: #BA2121 } /* Literal.String.Heredoc */
+.highlight-ipynb .si { color: #BB6688; font-weight: bold } /* Literal.String.Interpol */
+.highlight-ipynb .sx { color: #008000 } /* Literal.String.Other */
+.highlight-ipynb .sr { color: #BB6688 } /* Literal.String.Regex */
+.highlight-ipynb .s1 { color: #BA2121 } /* Literal.String.Single */
+.highlight-ipynb .ss { color: #19177C } /* Literal.String.Symbol */
+.highlight-ipynb .bp { color: #008000 } /* Name.Builtin.Pseudo */
+.highlight-ipynb .vc { color: #19177C } /* Name.Variable.Class */
+.highlight-ipynb .vg { color: #19177C } /* Name.Variable.Global */
+.highlight-ipynb .vi { color: #19177C } /* Name.Variable.Instance */
+.highlight-ipynb .il { color: #666666 } /* Literal.Number.Integer.Long */
+</style>
+
+<style type="text/css">
+/* Overrides of notebook CSS for static HTML export */
+div.entry-content {
+  overflow: visible;
+  padding: 8px;
+}
+.input_area {
+  padding: 0.2em;
+}
+
+a.heading-anchor {
+ white-space: normal;
+}
+
+.rendered_html
+code {
+ font-size: .8em;
+}
+
+pre.ipynb {
+  color: black;
+  background: #f7f7f7;
+  border: none;
+  box-shadow: none;
+  margin-bottom: 0;
+  padding: 0;
+  margin: 0px;
+  font-size: 13px;
+}
+
+/* remove the prompt div from text cells */
+div.text_cell .prompt {
+    display: none;
+}
+
+/* remove horizontal padding from text cells, */
+/* so it aligns with outer body text */
+div.text_cell_render {
+    padding: 0.5em 0em;
+}
+
+img.anim_icon{padding:0; border:0; vertical-align:middle; -webkit-box-shadow:none; -box-shadow:none}
+
+div.collapseheader {
+    width=100%;
+    padding: 2px;
+    cursor: pointer;
+    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML" type="text/javascript"></script>
+<script type="text/javascript">
+init_mathjax = function() {
+    if (window.MathJax) {
+        // MathJax loaded
+        MathJax.Hub.Config({
+            tex2jax: {
+                inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                displayMath: [ ['$$','$$'], ["\\[","\\]"] ]
+            },
+            displayAlign: 'left', // Change this to 'center' to center equations.
+            "HTML-CSS": {
+                styles: {'.MathJax_Display': {"margin": 0}}
+            }
+        });
+        MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+    }
+}
+init_mathjax();
+</script>
+
+<link rel="canonical" href="/blog/taking-advantage-of-sparsity-in-als-wr-algorithm/">
+
+        <meta name="author" content="Ben Lindsay" />
+        <meta name="keywords" content="als-wr,python,machine learning,recommender systems" />
+        <meta name="description" content="The ALS-WR algorithm works well for recommender systems involving a sparse matrix of users by items to review, which happens when most people only review a small subset of many possible items (businesses, movies, etc.). By tweaking the code from a great tutorial to take advantage of this sparsity, I was able to dramatically reduce the computation time." />
+
+        <meta property="og:site_name" content="Ben Lindsay" />
+        <meta property="og:type" content="article"/>
+        <meta property="og:title" content="Taking Advantage of Sparsity in the ALS-WR Algorithm"/>
+        <meta property="og:url" content="/blog/taking-advantage-of-sparsity-in-als-wr-algorithm/"/>
+        <meta property="og:description" content="The ALS-WR algorithm works well for recommender systems involving a sparse matrix of users by items to review, which happens when most people only review a small subset of many possible items (businesses, movies, etc.). By tweaking the code from a great tutorial to take advantage of this sparsity, I was able to dramatically reduce the computation time."/>
+        <meta property="article:published_time" content="2017-02-11" />
+            <meta property="article:section" content="Blog" />
+            <meta property="article:tag" content="als-wr" />
+            <meta property="article:tag" content="python" />
+            <meta property="article:tag" content="machine learning" />
+            <meta property="article:tag" content="recommender systems" />
+            <meta property="article:author" content="Ben Lindsay" />
+
+
+
+    <!-- Bootstrap -->
+        <link rel="stylesheet" href="/theme/css/bootstrap.min.css" type="text/css"/>
+    <link href="/theme/css/font-awesome.min.css" rel="stylesheet">
+
+    <link href="/theme/css/pygments/default.css" rel="stylesheet">
+    <link rel="stylesheet" href="/theme/css/style.css" type="text/css"/>
+
+
+
+
+
+</head>
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a href="/" class="navbar-brand">
+Ben Lindsay            </a>
+        </div>
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+            <ul class="nav navbar-nav">
+                    <li><a href="/blog/">Blog</a></li>
+                    <li><a href="/projects/">Projects</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+              <li><a href="/archives/"><i class="fa fa-th-list"></i><span class="icon-label">Archives</span></a></li>
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+</div> <!-- /.navbar -->
+
+<!-- Banner -->
+<!-- End Banner -->
+
+<!-- Content Container -->
+<div class="container">
+    <div class="row">
+        <div class="col-sm-9">
+    <section id="content">
+        <article>
+            <header class="page-header">
+                <h1>
+                    <a href="/blog/taking-advantage-of-sparsity-in-als-wr-algorithm/"
+                       rel="bookmark"
+                       title="Permalink to Taking Advantage of Sparsity in the ALS-WR Algorithm">
+                        Taking Advantage of Sparsity in the ALS-WR Algorithm
+                    </a>
+                </h1>
+            </header>
+            <div class="entry-content">
+                <!-- <div class="panel"> -->
+                <!--     <div class="panel-body"> -->
+<footer class="post-info row">
+  <div class="col-sm-12">
+    <time class="published" datetime="2017-02-11T23:25:00-05:00">
+      Sat 11 February 2017
+    </time>
+    &nbsp; | &nbsp;
+    <a href="/blog/"><i class="fa fa-folder-open"></i> Blog</a>
+  </div>
+  <div class="spacer"></div>
+
+    <!-- <span class="label label-default">Date</span> -->
+    <!-- <span class="published"> -->
+    <!--     <i class="fa fa-calendar"></i><time datetime="2017-02-11T23:25:00-05:00"> Sat 11 February 2017</time> -->
+    <!-- </span> -->
+    <!--  -->
+
+
+
+
+
+    <div class="col-sm-12">
+<a href="/tag/als-wr/" class="nounderline">
+  <button type="button" class="btn tag-btn">
+    als-wr
+  </button>
+</a>
+<a href="/tag/python/" class="nounderline">
+  <button type="button" class="btn tag-btn">
+    python
+  </button>
+</a>
+<a href="/tag/machine-learning/" class="nounderline">
+  <button type="button" class="btn tag-btn">
+    machine learning
+  </button>
+</a>
+<a href="/tag/recommender-systems/" class="nounderline">
+  <button type="button" class="btn tag-btn">
+    recommender systems
+  </button>
+</a>
+    </div>
+    
+    <div class="col-sm-12 spacer"></div>
+</footer><!-- /.post-info -->                    <!-- </div> -->
+                <!-- </div> -->
+                <p>As a part of the <a class="reference external" href="http://penndsg.com">Penn Data Science Group</a> which I co-founded with <a class="reference external" href="http://jennhwang.me/">Jenn Hwang</a>, I'm starting on a team project aimed at developing a recommender system using Yelp data provided for the <a class="reference external" href="https://www.yelp.com/dataset_challenge">Yelp Dataset Challenge</a>. Since the Alternating-Least-Squares with Weighted-<span class="math">\(\lambda\)</span>-Regularization (ALS-WR) algorithm seems to be a popular algorithm for recommender systems, I'm testing it on our Yelp dataset. It was developed for the <a class="reference external" href="http://www.netflixprize.com/">Netflix Prize</a> competition, which also involved a sparse matrix of reviewers by items being reviewed.</p>
+<p>While searching for resources on the ALS-WR algorithm, I came across <a class="reference external" href="http://online.cambridgecoding.com/notebooks/mhaller/predicting-user-preferences-in-python-using-alternating-least-squares">an excellent tutorial</a> that walks you through the theory and how to implement the algorithm using python on a small dataset of movie reviews. It even provides a <a class="reference external" href="https://s3-eu-west-1.amazonaws.com/com.cambridgecoding.students/mhaller/notebooks/654ddb1334a7f8246ca48d91dd98b653/notebook.ipynb">link to download a Jupyter Notebook</a> that you can run and see the algorithm in action. Having this notebook to toy around with was extremely helpful in familiarizing myself with the algorithm. However, as I compared the code in the notebook to the math in the blog post and in the <a class="reference external" href="http://www.grappa.univ-lille3.fr/~mary/cours/stats/centrale/reco/paper/MatrixFactorizationALS.pdf">original paper</a>, it seemed like it wasn't taking full advantage of the sparsity of the ratings matrix <span class="math">\(R\)</span>, which is a key feature of this type of problem. By slightly changing a couple lines in this code, I was able to dramatically reduce the computation time by taking advantage of the sparsity.</p>
+<div class="section" id="the-model">
+<h2>The Model</h2>
+<p>I won't walk through all the details because the tutorial already does that really well, but I'll give enough background to explain the change I made and why it speeds up the computation.</p>
+<p>We start with a matrix <span class="math">\(R\)</span> of size <span class="math">\((m \times n)\)</span> where each row represents one of the <span class="math">\(m\)</span> users and each column represents one of the <span class="math">\(n\)</span> movies. Most of the matrix contains 0's since most users only review a small subset of the available movies. The dataset used in the tutorial contains only about 6% nonzero values. We want to generate a low-rank approximation for <span class="math">\(R\)</span> such that <span class="math">\(R \approx P^TQ\)</span>, where <span class="math">\(P^T\)</span> is size <span class="math">\((m \times k)\)</span> and <span class="math">\(Q\)</span> is size <span class="math">\((k \times n)\)</span>, as shown below (image borrowed from the <a class="reference external" href="http://online.cambridgecoding.com/notebooks/mhaller/predicting-user-preferences-in-python-using-alternating-least-squares">tutorial</a>):</p>
+<img alt="ALS-WR Matrix Schematic" src="/images/als-wr-matrix-schematic.png" />
+<p>The columns of the resulting matrices <span class="math">\(P\)</span> and <span class="math">\(Q\)</span> turn out to contain columns with <span class="math">\(k\)</span> latent features about the users and movies, respectively. The <span class="math">\(P\)</span> and <span class="math">\(Q\)</span> matrices are calculated iteratively, by fixing one and solving for the other, then repeating while alternating which one is fixed. As a side note, in case you want to look at the paper, the notation is a little different. They use <span class="math">\(U\)</span> and <span class="math">\(M\)</span> instead of <span class="math">\(P\)</span> and <span class="math">\(Q\)</span>, and <span class="math">\(n_u\)</span> and <span class="math">\(n_m\)</span> instead of <span class="math">\(m\)</span> and <span class="math">\(n\)</span>. I'll stick with the tutorial notation in this post.</p>
+<p>The equations for solving for <span class="math">\(P\)</span> and <span class="math">\(Q\)</span> are quite similar, so let's just look at the equation for <span class="math">\(P\)</span>. In each iteration, the column for each user in <span class="math">\(P\)</span> is generated with the following equation:</p>
+<p><span class="math">\(\mathbf{p}_i = A_i^{-1} V_i\)</span> where <span class="math">\(A_i = Q_{I_i} Q_{I_i}^T + \lambda n_{p_i} E\)</span> and <span class="math">\(V_i = Q_{I_i} R^T(i, I_i)\)</span></p>
+<p>Here, <span class="math">\(E\)</span> is the <span class="math">\((k \times k)\)</span> identity matrix, <span class="math">\(n_{p_i}\)</span> is the number of movies rated by user <span class="math">\(i\)</span>, and <span class="math">\(I_i\)</span> is the set of all movies rated by user <span class="math">\(i\)</span>. That <span class="math">\(I_i\)</span> in <span class="math">\(Q_{I_i}\)</span> and <span class="math">\(R(i, I_i)\)</span> means we are selecting only the columns for movies rated by user <span class="math">\(i\)</span>, and the way that selection is made makes all the difference.</p>
+</div>
+<div class="section" id="selecting-columns">
+<h2>Selecting Columns</h2>
+<p>In the tutorial, the key lines to generate each <span class="math">\(\mathbf{p}_i\)</span> look like this:</p>
+<pre class="code python literal-block">
+<span class="n">Ai</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Ii</span><span class="p">),</span> <span class="n">Q</span><span class="o">.</span><span class="n">T</span><span class="p">))</span> <span class="o">+</span> <span class="n">lmbda</span> <span class="o">*</span> <span class="n">nui</span> <span class="o">*</span> <span class="n">E</span>
+<span class="n">Vi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Q</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">Ii</span><span class="p">),</span> <span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+<span class="n">P</span><span class="p">[:,</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">Ai</span><span class="p">,</span><span class="n">Vi</span><span class="p">)</span>
+</pre>
+<p>Notice that in the equation for <span class="math">\(A_i\)</span>, the way it removes columns for movies that weren't reviewed by user <span class="math">\(i\)</span> is creating a <span class="math">\((n \times n)\)</span> matrix with the elements of <span class="math">\(I_i\)</span> along the diagonal, then doing a <span class="math">\((n \times n) \times (n \times k)\)</span> matrix multiplication between that and <span class="math">\(Q^T\)</span>, which zeroes out columns of <span class="math">\(Q\)</span> for movies user <span class="math">\(i\)</span> did not review. This matrix multiplication is an expensive operation that (naively) has a complexity of <span class="math">\(O(kn^2)\)</span> (although probably a bit better with the <em>numpy</em> implementation). A similar operation is done in the <span class="math">\(V_i\)</span> calculation. Even though this is not as expensive (complexity of <span class="math">\(O(n^2)\)</span>), that's still an operation we'd like to avoid if possible.</p>
+<p>On reading the equations and Matlab algorithm implementation in the original paper, I noticed that rather than zeroing out unwanted columns, they actually remove those columns by creating a submatrix of <span class="math">\(Q\)</span> and a subvector of <span class="math">\(\mathbf{r}_i\)</span>. This does 2 important things: First, it lets us remove that inner matrix multiplications. Second, it dramatically reduces the cost of the remaining matrix multiplications. Since we have a density of only about 6% in our <span class="math">\(R\)</span> matrix, the cost of both <span class="math">\(Q_{I_i}Q_{I_i}^T\)</span> and <span class="math">\(Q_{I_i}R^T(i,I_i)\)</span> should theoretically be reduced to about 6% of their original costs, since the complexities of those operations (<span class="math">\(O(nk^2)\)</span> and <span class="math">\(O(nk)\)</span>) are both linearly dependent on <span class="math">\(n\)</span>. Here's the code that replaces the 3 lines shown above:</p>
+<pre class="code python literal-block">
+<span class="c1"># Get array of nonzero indices in row Ii</span>
+<span class="n">Ii_nonzero</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">nonzero</span><span class="p">(</span><span class="n">Ii</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="c1"># Select subset of Q associated with movies reviewed by user i</span>
+<span class="n">Q_Ii</span> <span class="o">=</span> <span class="n">Q</span><span class="p">[:,</span> <span class="n">Ii_nonzero</span><span class="p">]</span>
+<span class="c1"># Select subset of row R_i associated with movies reviewed by user i</span>
+<span class="n">R_Ii</span> <span class="o">=</span> <span class="n">R</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">Ii_nonzero</span><span class="p">]</span>
+<span class="n">Ai</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Q_Ii</span><span class="p">,</span> <span class="n">Q_Ii</span><span class="o">.</span><span class="n">T</span><span class="p">)</span> <span class="o">+</span> <span class="n">lmbda</span> <span class="o">*</span> <span class="n">nui</span> <span class="o">*</span> <span class="n">E</span>
+<span class="n">Vi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Q_Ii</span><span class="p">,</span> <span class="n">R_Ii</span><span class="o">.</span><span class="n">T</span><span class="p">)</span>
+<span class="n">P</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">Ai</span><span class="p">,</span> <span class="n">Vi</span><span class="p">)</span>
+</pre>
+<p>By making that replacement and a similar one for the equations for <span class="math">\(\mathbf{q}_j\)</span>, a series of 15 iterations went from taking 15-16 minutes down to about 13 seconds—a ~70-fold speedup! Check out <a class="reference external" href="https://github.com/benlindsay/als-wr-tutorial/blob/master/modified_notebook.ipynb">the notebook with my updates</a> on GitHub, or clone the whole <a class="reference external" href="https://github.com/benlindsay/als-wr-tutorial">repo</a> to run it yourself.</p>
+</div>
+<div class="section" id="conclusions">
+<h2>Conclusions</h2>
+<p>The moral of the story here is that sometimes things that don't seem like a big deal at first glance can make huge changes in the performance of your algorithms. This exercise reinforced in my mind the value of spending a little extra time to make sure you understand the algorithm or tool you're using. And more specifically, if you have a sparse dataset, make that sparsity work for you.</p>
+</div>
+<script type='text/javascript'>if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+            </div>
+            <!-- /.entry-content -->
+    <hr/>
+    <section class="comments" id="comments">
+        <h2>Comments</h2>
+
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+            /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+            var disqus_shortname = 'benlindsay'; // required: replace example with your forum shortname
+
+                    var disqus_identifier = 'taking-advantage-of-sparsity-in-als-wr-algorithm';
+                var disqus_url = '/blog/taking-advantage-of-sparsity-in-als-wr-algorithm/';
+
+            var disqus_config = function () {
+                this.language = "en";
+            };
+
+            /* * * DON'T EDIT BELOW THIS LINE * * */
+            (function () {
+                var dsq = document.createElement('script');
+                dsq.type = 'text/javascript';
+                dsq.async = true;
+                dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            })();
+        </script>
+        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by
+            Disqus.</a></noscript>
+        <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+    </section>
+        </article>
+    </section>
+
+        </div>
+        <div class="col-sm-3" id="sidebar">
+            <aside>
+<div id="aboutme">
+        <p>
+            <img width="100%" class="img-thumbnail" src="/images/profile.jpg"/>
+        </p>
+    <p>
+        
+Hi! I'm Ben. I'm a PhD student at UPenn, data science enthusiast, and
+co-founder of <a href="http://penndsg.com/">Penn Data Science Group</a>.
+I enjoy hacking around with new tools and finding ways to automate things.
+I am an avid Python user and a diehard Vim nerd. I'll be graduating in 2019.
+
+    </p>
+</div><!-- Sidebar -->
+<section class="well well-sm">
+  <ul class="list-group list-group-flush">
+
+<!-- Sidebar/Social -->
+<li class="list-group-item">
+  <h4><i class="fa fa-home fa-lg"></i><span class="icon-label">Social</span></h4>
+  <ul class="list-group" id="social">
+    <li class="list-group-item"><a href="https://github.com/benlindsay"><i class="fa fa-github-square fa-lg"></i> github</a></li>
+    <li class="list-group-item"><a href="https://www.linkedin.com/in/benjlindsay/"><i class="fa fa-linkedin-square fa-lg"></i> linkedin</a></li>
+    <li class="list-group-item"><a href="mailto:benjlindsay+website@gmail.com"><i class="fa fa-envelope fa-lg"></i> email</a></li>
+    <li class="list-group-item"><a href="https://twitter.com/ben_j_lindsay"><i class="fa fa-twitter-square fa-lg"></i> twitter</a></li>
+  </ul>
+</li>
+<!-- End Sidebar/Social -->
+
+<!-- Sidebar/Tag Cloud -->
+<li class="list-group-item">
+  <a href="/tag/"><h4><i class="fa fa-tags fa-lg"></i><span class="icon-label">Tags</span></h4></a>
+  <ul class="list-group " id="tags">
+    <li class="list-group-item tag-0">
+      <a href="/tag/python/">python</a>
+    </li>
+    <li class="list-group-item tag-12">
+      <a href="/tag/recommender-systems/">recommender systems</a>
+    </li>
+    <li class="list-group-item tag-19">
+      <a href="/tag/pandas/">pandas</a>
+    </li>
+    <li class="list-group-item tag-31">
+      <a href="/tag/bash/">bash</a>
+    </li>
+    <li class="list-group-item tag-31">
+      <a href="/tag/productivity/">productivity</a>
+    </li>
+    <li class="list-group-item tag-31">
+      <a href="/tag/jupyter-notebooks/">jupyter notebooks</a>
+    </li>
+    <li class="list-group-item tag-31">
+      <a href="/tag/data-visualization/">data visualization</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/jupyter/">jupyter</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/tmux/">tmux</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/ssh/">ssh</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/seaborn/">seaborn</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/dask/">dask</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/big-data/">big data</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/als-wr/">als-wr</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/machine-learning/">machine learning</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/numpy/">numpy</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/d3/">d3</a>
+    </li>
+  </ul>
+</li>
+<!-- End Sidebar/Tag Cloud -->
+  </ul>
+</section>
+<!-- End Sidebar -->            </aside>
+        </div>
+    </div>
+</div>
+<!-- End Content Container -->
+
+<footer>
+   <div class="container">
+      <hr>
+      <div class="row">
+         <div class="col-xs-10">&copy; 2018 Ben Lindsay
+            &middot; Powered by <a href="https://github.com/getpelican/pelican-themes/tree/master/pelican-bootstrap3" target="_blank">pelican-bootstrap3</a>,
+            <a href="http://docs.getpelican.com/" target="_blank">Pelican</a>,
+            <a href="http://getbootstrap.com" target="_blank">Bootstrap</a>         </div>
+         <div class="col-xs-2"><p class="pull-right"><i class="fa fa-arrow-up"></i> <a href="#">Back to top</a></p></div>
+      </div>
+   </div>
+</footer>
+<script src="/theme/js/jquery.min.js"></script>
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="/theme/js/bootstrap.min.js"></script>
+
+<!-- Enable responsive features in IE8 with Respond.js (https://github.com/scottjehl/Respond) -->
+<script src="/theme/js/respond.min.js"></script>
+
+
+    <!-- Disqus -->
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'benlindsay'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function () {
+            var s = document.createElement('script');
+            s.async = true;
+            s.type = 'text/javascript';
+            s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+            (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+        }());
+    </script>
+    <!-- End Disqus Code -->
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    $("div.collapseheader").click(function () {
+    $header = $(this).children("span").first();
+    $codearea = $(this).children(".input_area");
+    console.log($(this).children());
+    $codearea.slideToggle(500, function () {
+        $header.text(function () {
+            return $codearea.is(":visible") ? "Collapse Code" : "Expand Code";
+        });
+    });
+});
+});
+</script>
+</body>
+</html>

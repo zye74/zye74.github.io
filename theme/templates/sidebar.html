@@ -1,0 +1,99 @@
+<div class="three columns">
+
+<!-- <h4>Pages</h4> -->
+
+ <!-- <ul> -->
+ <!--  {% for title, link in MENUITEMS %} -->
+ <!--      <li><a href="{{ link }}">{{ title }}</a></li> -->
+ <!--  {% endfor %} -->
+ <!--  {% if DISPLAY_PAGES_ON_MENU %} -->
+ <!--    {% for p in PAGES %} -->
+ <!--      <li{% if p == page %} class="active"{% endif %}><a href="{{ SITEURL }}/{{ p.url }}">{{ p.title }}</a></li> -->
+ <!--    {% endfor %} -->
+ <!--  {% else %} -->
+ <!--    {% if DISPLAY_CATEGORIES_ON_MENU %} -->
+ <!--      {% for cat, null in categories %} -->
+ <!--        <li{% if cat == category %} class="active"{% endif %}><a href="{{ SITEURL }}/{{ cat.url }}">{{ cat }}</a></li> -->
+ <!--      {% endfor %} -->
+ <!--    {% endif %} -->
+ <!--  {% endif %} -->
+ <!--  </ul> -->
+
+<!-- <h4>Categories</h4> -->
+<!-- {% if categories %} -->
+<!-- <ul class="blank"> -->
+<!-- 	{% for cat, null in categories %} -->
+<!-- 		<li><a href="{{ SITEURL }}/{{ cat.url|e }}">{{ cat }}</a></li> -->
+<!-- 	{% endfor %} -->
+<!-- </ul> -->
+<!-- {% endif %} -->
+
+<div class="smallspacer"></div>
+<section id="sidebar-icons">
+  <span class="fa-stack fa-lg">
+    <a href="mailto:benjlindsay@gmail.com">
+      <i class="fa fa-envelope-square fa-stack-2x"></i>
+    </a>
+  </span>
+  <span class="fa-stack fa-lg">
+    <a href="https://www.linkedin.com/in/benjlindsay">
+      <i class="fa fa-linkedin-square fa-stack-2x"></i>
+    </a>
+  </span>
+  <span class="fa-stack fa-lg">
+    <a href="https://github.com/benlindsay">
+      <i class="fa fa-github-square fa-stack-2x"></i>
+    </a>
+  </span>
+  <span class="fa-stack fa-lg">
+    <a href="http://penndsg.com/">
+      <!-- <img style="display: inline-block; margin-top: 2px; margin-left: 4px" -->
+      <!--      src="/images/pdsg_black_and_white.svg" -->
+      <!--      alt="Penn Data Science Group" height=40px width=40px> -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="40px" height="40px"
+           viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet"
+           id="pdsg-logo" style="margin-top: 2px; margin-left: 4px">
+        <style>
+          .a{fill:#444;}
+          .b{fill:#fff;}
+        </style>
+        <metadata class="undefined"></metadata>
+        <rect width="800" height="800" rx="160" ry="160" class="a"/>
+        <g transform="matrix(0.1 0 0 -0.1 49.95 762.85737)" class="b">
+          <path d="m600 5213c0-1603 2-1651 45-1906 123-712 482-1366 1067-1943 268-265 496-449 806-651 370-240 791-436 967-450 64-5 82-2 195 36 278 93 664 308 1016 565 368 270 749 644 995 976 328 444 549 926 644 1408 61 306 58 215 62 1925l4 1567-2901 0-2900 0zm5717-925c-4-688-8-752-62-1020-56-282-173-612-304-858l-40-75-1 538 0 537-415 0-415 0 0-1064 0-1063-83-72-82-71-3 510-2 510-415 0-415 0 0-798 0-798-75-37c-42-20-80-37-85-37-7 0-10 594-10 1705l0 1705-410 0-410 0 0-1705c0-938-2-1705-5-1705-3 0-41 18-85 40l-80 40 0 2070 0 2070-415 0-415 0-2-1790-3-1790-82 71-83 70 0 765 0 764-415 0-415 0-2-247-3-248-52 100c-115 223-216 501-271 746-70 307-82 483-82 1222l0 557 2821 0 2821 0z" class="b"/>
+          <path d="m2525 5630c-38-15-48-38-50-115l-3-75 40 0c69 0 178 99 153 140-7 11-99 60-112 59-4 0-17-4-28-9z" class="b"/>
+        </g>
+      </svg>
+    </a>
+  </span>
+  <!-- <span class="fa-stack fa-lg"> -->
+  <!--   <a href="https://bitbucket.org/benlindsay"> -->
+  <!--     <i class="fa fa-bitbucket-square fa-stack-2x"></i> -->
+  <!--   </a> -->
+  <!-- </span> -->
+</section>
+
+<h4>Tags</h4>
+{% if tags %}
+  <ul class="blank">
+  {% for tag in tag_cloud %}
+    <li class="tag-{{ tag.1 }}">
+      <a href="{{ SITEURL }}/{{ tag.0.url }}">{{ tag.0|e }}</a>
+      {% if TAG_CLOUD_BADGE %}({{ tag.2 }}){% endif %}
+    </li>
+  {% endfor %}
+</ul>
+{% endif %}
+
+{% if SOCIAL %}
+<nav class="widget">
+  <h4>Social</h4>
+  <ul class="blank">
+  {% for name, url in SOCIAL %}
+    <li><a href="{{ url|e }}">{{ name }}</a></li>
+  {% endfor %}
+  </ul>
+</nav>
+{% endif %}
+
+</div>

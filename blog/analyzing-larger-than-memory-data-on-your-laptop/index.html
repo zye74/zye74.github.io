@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="en" prefix="og: http://ogp.me/ns# fb: https://www.facebook.com/2008/fbml">
+<head>
+    <title>Analyzing Larger-than-Memory Data on your Laptop - Ben Lindsay</title>
+    <!-- Using the latest rendering mode for IE -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
+
+
+<style type="text/css">
+
+/*some stuff for output/input prompts*/
+div.cell{border:1px solid transparent;display:-webkit-box;-webkit-box-orient:vertical;-webkit-box-align:stretch;display:-moz-box;-moz-box-orient:vertical;-moz-box-align:stretch;display:box;box-orient:vertical;box-align:stretch;display:flex;flex-direction:column;align-items:stretch}div.cell.selected{border-radius:4px;border:thin #ababab solid}
+div.cell.edit_mode{border-radius:4px;border:thin #008000 solid}
+div.cell{width:100%;padding:5px 5px 5px 0;margin:0;outline:none}
+div.prompt{min-width:11ex;padding:.4em;margin:0;font-family:monospace;text-align:right;line-height:1.21429em}
+@media (max-width:480px){div.prompt{text-align:left}}div.inner_cell{display:-webkit-box;-webkit-box-orient:vertical;-webkit-box-align:stretch;display:-moz-box;-moz-box-orient:vertical;-moz-box-align:stretch;display:box;box-orient:vertical;box-align:stretch;display:flex;flex-direction:column;align-items:stretch;-webkit-box-flex:1;-moz-box-flex:1;box-flex:1;flex:1}
+div.input_area{border:1px solid #cfcfcf;border-radius:4px;background:#f7f7f7;line-height:1.21429em}
+div.prompt:empty{padding-top:0;padding-bottom:0}
+div.input{page-break-inside:avoid;display:-webkit-box;-webkit-box-orient:horizontal;-webkit-box-align:stretch;display:-moz-box;-moz-box-orient:horizontal;-moz-box-align:stretch;display:box;box-orient:horizontal;box-align:stretch;}
+div.inner_cell{width:90%;}
+div.input_area{border:1px solid #cfcfcf;border-radius:4px;background:#f7f7f7;}
+div.input_prompt{color:navy;border-top:1px solid transparent;}
+div.output_wrapper{margin-top:5px;position:relative;display:-webkit-box;-webkit-box-orient:vertical;-webkit-box-align:stretch;display:-moz-box;-moz-box-orient:vertical;-moz-box-align:stretch;display:box;box-orient:vertical;box-align:stretch;width:100%;}
+div.output_scroll{height:24em;width:100%;overflow:auto;border-radius:4px;-webkit-box-shadow:inset 0 2px 8px rgba(0, 0, 0, 0.8);-moz-box-shadow:inset 0 2px 8px rgba(0, 0, 0, 0.8);box-shadow:inset 0 2px 8px rgba(0, 0, 0, 0.8);}
+div.output_collapsed{margin:0px;padding:0px;display:-webkit-box;-webkit-box-orient:vertical;-webkit-box-align:stretch;display:-moz-box;-moz-box-orient:vertical;-moz-box-align:stretch;display:box;box-orient:vertical;box-align:stretch;width:100%;}
+div.out_prompt_overlay{height:100%;padding:0px 0.4em;position:absolute;border-radius:4px;}
+div.out_prompt_overlay:hover{-webkit-box-shadow:inset 0 0 1px #000000;-moz-box-shadow:inset 0 0 1px #000000;box-shadow:inset 0 0 1px #000000;background:rgba(240, 240, 240, 0.5);}
+div.output_prompt{color:darkred;}
+
+a.anchor-link:link{text-decoration:none;padding:0px 20px;visibility:hidden;}
+h1:hover .anchor-link,h2:hover .anchor-link,h3:hover .anchor-link,h4:hover .anchor-link,h5:hover .anchor-link,h6:hover .anchor-link{visibility:visible;}
+/* end stuff for output/input prompts*/
+
+
+.highlight-ipynb .hll { background-color: #ffffcc }
+.highlight-ipynb  { background: #f8f8f8; }
+.highlight-ipynb .c { color: #408080; font-style: italic } /* Comment */
+.highlight-ipynb .err { border: 1px solid #FF0000 } /* Error */
+.highlight-ipynb .k { color: #008000; font-weight: bold } /* Keyword */
+.highlight-ipynb .o { color: #666666 } /* Operator */
+.highlight-ipynb .cm { color: #408080; font-style: italic } /* Comment.Multiline */
+.highlight-ipynb .cp { color: #BC7A00 } /* Comment.Preproc */
+.highlight-ipynb .c1 { color: #408080; font-style: italic } /* Comment.Single */
+.highlight-ipynb .cs { color: #408080; font-style: italic } /* Comment.Special */
+.highlight-ipynb .gd { color: #A00000 } /* Generic.Deleted */
+.highlight-ipynb .ge { font-style: italic } /* Generic.Emph */
+.highlight-ipynb .gr { color: #FF0000 } /* Generic.Error */
+.highlight-ipynb .gh { color: #000080; font-weight: bold } /* Generic.Heading */
+.highlight-ipynb .gi { color: #00A000 } /* Generic.Inserted */
+.highlight-ipynb .go { color: #888888 } /* Generic.Output */
+.highlight-ipynb .gp { color: #000080; font-weight: bold } /* Generic.Prompt */
+.highlight-ipynb .gs { font-weight: bold } /* Generic.Strong */
+.highlight-ipynb .gu { color: #800080; font-weight: bold } /* Generic.Subheading */
+.highlight-ipynb .gt { color: #0044DD } /* Generic.Traceback */
+.highlight-ipynb .kc { color: #008000; font-weight: bold } /* Keyword.Constant */
+.highlight-ipynb .kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
+.highlight-ipynb .kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
+.highlight-ipynb .kp { color: #008000 } /* Keyword.Pseudo */
+.highlight-ipynb .kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
+.highlight-ipynb .kt { color: #B00040 } /* Keyword.Type */
+.highlight-ipynb .m { color: #666666 } /* Literal.Number */
+.highlight-ipynb .s { color: #BA2121 } /* Literal.String */
+.highlight-ipynb .na { color: #7D9029 } /* Name.Attribute */
+.highlight-ipynb .nb { color: #008000 } /* Name.Builtin */
+.highlight-ipynb .nc { color: #0000FF; font-weight: bold } /* Name.Class */
+.highlight-ipynb .no { color: #880000 } /* Name.Constant */
+.highlight-ipynb .nd { color: #AA22FF } /* Name.Decorator */
+.highlight-ipynb .ni { color: #999999; font-weight: bold } /* Name.Entity */
+.highlight-ipynb .ne { color: #D2413A; font-weight: bold } /* Name.Exception */
+.highlight-ipynb .nf { color: #0000FF } /* Name.Function */
+.highlight-ipynb .nl { color: #A0A000 } /* Name.Label */
+.highlight-ipynb .nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
+.highlight-ipynb .nt { color: #008000; font-weight: bold } /* Name.Tag */
+.highlight-ipynb .nv { color: #19177C } /* Name.Variable */
+.highlight-ipynb .ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
+.highlight-ipynb .w { color: #bbbbbb } /* Text.Whitespace */
+.highlight-ipynb .mf { color: #666666 } /* Literal.Number.Float */
+.highlight-ipynb .mh { color: #666666 } /* Literal.Number.Hex */
+.highlight-ipynb .mi { color: #666666 } /* Literal.Number.Integer */
+.highlight-ipynb .mo { color: #666666 } /* Literal.Number.Oct */
+.highlight-ipynb .sb { color: #BA2121 } /* Literal.String.Backtick */
+.highlight-ipynb .sc { color: #BA2121 } /* Literal.String.Char */
+.highlight-ipynb .sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
+.highlight-ipynb .s2 { color: #BA2121 } /* Literal.String.Double */
+.highlight-ipynb .se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
+.highlight-ipynb .sh { color: #BA2121 } /* Literal.String.Heredoc */
+.highlight-ipynb .si { color: #BB6688; font-weight: bold } /* Literal.String.Interpol */
+.highlight-ipynb .sx { color: #008000 } /* Literal.String.Other */
+.highlight-ipynb .sr { color: #BB6688 } /* Literal.String.Regex */
+.highlight-ipynb .s1 { color: #BA2121 } /* Literal.String.Single */
+.highlight-ipynb .ss { color: #19177C } /* Literal.String.Symbol */
+.highlight-ipynb .bp { color: #008000 } /* Name.Builtin.Pseudo */
+.highlight-ipynb .vc { color: #19177C } /* Name.Variable.Class */
+.highlight-ipynb .vg { color: #19177C } /* Name.Variable.Global */
+.highlight-ipynb .vi { color: #19177C } /* Name.Variable.Instance */
+.highlight-ipynb .il { color: #666666 } /* Literal.Number.Integer.Long */
+</style>
+
+<style type="text/css">
+/* Overrides of notebook CSS for static HTML export */
+div.entry-content {
+  overflow: visible;
+  padding: 8px;
+}
+.input_area {
+  padding: 0.2em;
+}
+
+a.heading-anchor {
+ white-space: normal;
+}
+
+.rendered_html
+code {
+ font-size: .8em;
+}
+
+pre.ipynb {
+  color: black;
+  background: #f7f7f7;
+  border: none;
+  box-shadow: none;
+  margin-bottom: 0;
+  padding: 0;
+  margin: 0px;
+  font-size: 13px;
+}
+
+/* remove the prompt div from text cells */
+div.text_cell .prompt {
+    display: none;
+}
+
+/* remove horizontal padding from text cells, */
+/* so it aligns with outer body text */
+div.text_cell_render {
+    padding: 0.5em 0em;
+}
+
+img.anim_icon{padding:0; border:0; vertical-align:middle; -webkit-box-shadow:none; -box-shadow:none}
+
+div.collapseheader {
+    width=100%;
+    padding: 2px;
+    cursor: pointer;
+    font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;
+}
+
+</style>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.0/MathJax.js?config=TeX-AMS_HTML" type="text/javascript"></script>
+<script type="text/javascript">
+init_mathjax = function() {
+    if (window.MathJax) {
+        // MathJax loaded
+        MathJax.Hub.Config({
+            tex2jax: {
+                inlineMath: [ ['$','$'], ["\\(","\\)"] ],
+                displayMath: [ ['$$','$$'], ["\\[","\\]"] ]
+            },
+            displayAlign: 'left', // Change this to 'center' to center equations.
+            "HTML-CSS": {
+                styles: {'.MathJax_Display': {"margin": 0}}
+            }
+        });
+        MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+    }
+}
+init_mathjax();
+</script>
+
+<link rel="canonical" href="/blog/analyzing-larger-than-memory-data-on-your-laptop/">
+
+        <meta name="author" content="Ben Lindsay" />
+        <meta name="keywords" content="python,recommender systems,dask,pandas,big data" />
+        <meta name="description" content="If you want to run some analysis on a dataset that&#39;s just a little too big to load into memory on your laptop, but you don&#39;t want to leave the comfort of using Pandas dataframes in a Jupyter notebook, then Dask may be just your thing. Dask is an amazing …" />
+
+        <meta property="og:site_name" content="Ben Lindsay" />
+        <meta property="og:type" content="article"/>
+        <meta property="og:title" content="Analyzing Larger-than-Memory Data on your Laptop"/>
+        <meta property="og:url" content="/blog/analyzing-larger-than-memory-data-on-your-laptop/"/>
+        <meta property="og:description" content="If you want to run some analysis on a dataset that&#39;s just a little too big to load into memory on your laptop, but you don&#39;t want to leave the comfort of using Pandas dataframes in a Jupyter notebook, then Dask may be just your thing. Dask is an amazing …"/>
+        <meta property="article:published_time" content="2017-03-10" />
+            <meta property="article:section" content="Blog" />
+            <meta property="article:tag" content="python" />
+            <meta property="article:tag" content="recommender systems" />
+            <meta property="article:tag" content="dask" />
+            <meta property="article:tag" content="pandas" />
+            <meta property="article:tag" content="big data" />
+            <meta property="article:author" content="Ben Lindsay" />
+
+
+
+    <!-- Bootstrap -->
+        <link rel="stylesheet" href="/theme/css/bootstrap.min.css" type="text/css"/>
+    <link href="/theme/css/font-awesome.min.css" rel="stylesheet">
+
+    <link href="/theme/css/pygments/default.css" rel="stylesheet">
+    <link rel="stylesheet" href="/theme/css/style.css" type="text/css"/>
+
+
+
+
+
+</head>
+<body>
+
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-ex1-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a href="/" class="navbar-brand">
+Ben Lindsay            </a>
+        </div>
+        <div class="collapse navbar-collapse navbar-ex1-collapse">
+            <ul class="nav navbar-nav">
+                    <li><a href="/blog/">Blog</a></li>
+                    <li><a href="/projects/">Projects</a></li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+              <li><a href="/archives/"><i class="fa fa-th-list"></i><span class="icon-label">Archives</span></a></li>
+            </ul>
+        </div>
+        <!-- /.navbar-collapse -->
+    </div>
+</div> <!-- /.navbar -->
+
+<!-- Banner -->
+<!-- End Banner -->
+
+<!-- Content Container -->
+<div class="container">
+    <div class="row">
+        <div class="col-sm-9">
+    <section id="content">
+        <article>
+            <header class="page-header">
+                <h1>
+                    <a href="/blog/analyzing-larger-than-memory-data-on-your-laptop/"
+                       rel="bookmark"
+                       title="Permalink to Analyzing Larger-than-Memory Data on your Laptop">
+                        Analyzing Larger-than-Memory Data on your Laptop
+                    </a>
+                </h1>
+            </header>
+            <div class="entry-content">
+                <!-- <div class="panel"> -->
+                <!--     <div class="panel-body"> -->
+<footer class="post-info row">
+  <div class="col-sm-12">
+    <time class="published" datetime="2017-03-10T19:10:00-05:00">
+      Fri 10 March 2017
+    </time>
+    &nbsp; | &nbsp;
+    <a href="/blog/"><i class="fa fa-folder-open"></i> Blog</a>
+  </div>
+  <div class="spacer"></div>
+
+    <!-- <span class="label label-default">Date</span> -->
+    <!-- <span class="published"> -->
+    <!--     <i class="fa fa-calendar"></i><time datetime="2017-03-10T19:10:00-05:00"> Fri 10 March 2017</time> -->
+    <!-- </span> -->
+    <!--  -->
+
+
+
+
+
+    <div class="col-sm-12">
+<a href="/tag/python/" class="nounderline">
+  <button type="button" class="btn tag-btn">
+    python
+  </button>
+</a>
+<a href="/tag/recommender-systems/" class="nounderline">
+  <button type="button" class="btn tag-btn">
+    recommender systems
+  </button>
+</a>
+<a href="/tag/dask/" class="nounderline">
+  <button type="button" class="btn tag-btn">
+    dask
+  </button>
+</a>
+<a href="/tag/pandas/" class="nounderline">
+  <button type="button" class="btn tag-btn">
+    pandas
+  </button>
+</a>
+<a href="/tag/big-data/" class="nounderline">
+  <button type="button" class="btn tag-btn">
+    big data
+  </button>
+</a>
+    </div>
+    
+    <div class="col-sm-12 spacer"></div>
+</footer><!-- /.post-info -->                    <!-- </div> -->
+                <!-- </div> -->
+                <p>If you want to run some analysis on a dataset that's just a little too big to load into memory on your laptop, but you don't want to leave the comfort of using <a class="reference external" href="http://pandas.pydata.org/">Pandas</a> dataframes in a <a class="reference external" href="http://jupyter.org/">Jupyter</a> notebook, then <a class="reference external" href="http://dask.pydata.org/">Dask</a> may be just your thing. Dask is an amazing Python library that lets you do all your Pandas-style dataframe manipulations with just a few simple tweaks so you don't have to worry about Jupyter freezing up.</p>
+<p>I'll demonstrate the benefits of Dask and some of its syntax by running a calculation on business reviews provided for the <a class="reference external" href="https://www.yelp.com/dataset_challenge">Yelp Dataset Challenge</a>, which contains 3.6 million business reviews. The reviews were provided in a file where each line is a JSON object with keys that include <code>&quot;business_id&quot;</code>,  <code>&quot;user_id&quot;</code>, <code>&quot;review_id&quot;</code>, <code>&quot;stars&quot;</code>, and others. I extracted about 90% of all the JSON objects associated with businesses in Champaign, Illinois to one file as a small dataset that can be loaded into Pandas, and about 90% of all the JSON objects associated with any US/Canada business into another file as a larger dataset that does not fit into a Pandas dataframe on my laptop. You can view the notebook with all the code below <a class="reference external" href="https://github.com/benlindsay/yelp-dataset-challenge/blob/master/ben-notebooks/pandas_dask_comparison.ipynb">here on GitHub</a>.</p>
+<div class="section" id="baseline-prediction-method">
+<h2>Baseline Prediction Method</h2>
+<p>The baseline prediction method I'll show below is one of 4 methods discussed in <a class="reference external" href="http://files.grouplens.org/papers/FnT%20CF%20Recsys%20Survey.pdf">this excellent survey of collaborative filtering recommender systems</a> by Michael Ekstrand, John Riedl, and Joseph Konstan. The methods are:</p>
+<ol class="arabic simple">
+<li>Predict by user's average rating</li>
+<li>Predict by item's average rating (&quot;items&quot; are businesses in this case)</li>
+<li>Predict by user's and item's average ratings</li>
+<li>Predict by user's and item's average ratings with damping factors</li>
+</ol>
+<p>The 4th method ended up giving the best predictions on both the Champaign data and US/Canada training set. The damping factors reduce the weight placed on users or items with few reviews, making the prediction more robust. The necessary equations are 2.1, 2.4, and 2.5 in the survey linked above.</p>
+<p>Equation 2.1 (<span class="math">\(b_{u,i} = \mu + b_u + b_i\)</span>) essentially says that if we want the baseline prediction for user <span class="math">\(u\)</span>'s rating of item <span class="math">\(i\)</span>, we can sum up the total average <span class="math">\(\mu\)</span>, the offset from the <span class="math">\(\mu\)</span>  corresponding to user <span class="math">\(u\)</span> (<span class="math">\(b_u\)</span>), and the offset from <span class="math">\(\mu + b_u\)</span> corresponding to item <span class="math">\(i\)</span> (<span class="math">\(b_i\)</span>).</p>
+<p>The equations for <span class="math">\(b_u\)</span> and <span class="math">\(b_i\)</span> are</p>
+<div class="math">
+\begin{equation*}
+b_u = \frac{1}{|I_u| + \beta_u}\sum_{i \in I_u} (r_{u,i} - \mu)
+\end{equation*}
+</div>
+<div class="math">
+\begin{equation*}
+b_i = \frac{1}{|U_i| + \beta_i}\sum_{u \in U_i} (r_{u,i} - b_u - \mu)
+\end{equation*}
+</div>
+<p>where <span class="math">\(r_{u_i}\)</span> is the actual rating of item (business) <span class="math">\(i\)</span> given by user <span class="math">\(u\)</span>, <span class="math">\(I_u\)</span> is the set of items rated by user <span class="math">\(u\)</span>, and <span class="math">\(U_i\)</span> is the set of users who rated business <span class="math">\(i\)</span>.</p>
+</div>
+<div class="section" id="loading-data">
+<h2>Loading Data</h2>
+<p>For all the following code blocks, assume we have the following imports:</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">dask.bag</span> <span class="kn">as</span> <span class="nn">db</span>
+</pre></div>
+<p>First, let's compare the data loading process for the small and large datasets. In both cases, the data are in the form of a single file with one line of JSON data for each review. Loading the Champaign data using Pandas looks like this:</p>
+<div class="highlight"><pre><span></span><span class="n">df_rev</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_json</span><span class="p">(</span><span class="s1">&#39;../preprocessed-data/all-champaign-reviews.json&#39;</span><span class="p">,</span> <span class="n">orient</span><span class="o">=</span><span class="s1">&#39;records&#39;</span><span class="p">,</span> <span class="n">lines</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+<span class="n">df_rev_champaign</span> <span class="o">=</span> <span class="n">df_rev_champaign</span><span class="p">[[</span><span class="s1">&#39;review_id&#39;</span><span class="p">,</span> <span class="s1">&#39;business_id&#39;</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;stars&#39;</span><span class="p">]]</span>
+</pre></div>
+<p>For the larger US/Canada training set, loading the data using Dask looks like this:</p>
+<div class="highlight"><pre><span></span><span class="n">dict_bag</span> <span class="o">=</span> <span class="n">db</span><span class="o">.</span><span class="n">read_text</span><span class="p">(</span><span class="s1">&#39;../preprocessed-data/reviews_train.json&#39;</span><span class="p">,</span> <span class="n">blocksize</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="mf">5e6</span><span class="p">))</span><span class="o">.</span><span class="n">map</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">)</span>
+<span class="n">df_rev</span> <span class="o">=</span> <span class="n">dict_bag</span><span class="o">.</span><span class="n">to_dataframe</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;review_id&#39;</span><span class="p">,</span> <span class="s1">&#39;business_id&#39;</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;stars&#39;</span><span class="p">])</span>
+<span class="n">df_rev</span> <span class="o">=</span> <span class="n">df_rev</span><span class="o">.</span><span class="n">repartition</span><span class="p">(</span><span class="n">npartitions</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+<p>When loading in larger-than-memory data, Dask splits the data into partitions no larger than <code>blocksize</code>. You want to ensure you have enough partitions to ensure your computer doesn't freeze, but too many will slow down the computation. For that reason, after I make a dataframe from a small subset of the features I read in, I repartition the data to reduce the number of partitions to 10. After the data are loaded in, you can treat your Dask datafame just like a Pandas dataframe (for the most part).</p>
+</div>
+<div class="section" id="computing-prediction-error">
+<h2>Computing Prediction Error</h2>
+<p>For these baseline tests, I use the root mean squared error (RMSE) to measure the baseline accuracy. When dealing with Pandas dataframes, I can use a function like this:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">rmse_pandas</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+    <span class="n">diff_sq</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">diff_sq</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+</pre></div>
+<p>In Dask, I can do the same thing with just an extra <code>.compute()</code> added, like so:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">rmse_dask</span><span class="p">(</span><span class="n">y_true</span><span class="p">,</span> <span class="n">y_pred</span><span class="p">):</span>
+    <span class="n">diff_sq</span> <span class="o">=</span> <span class="p">(</span><span class="n">y_true</span> <span class="o">-</span> <span class="n">y_pred</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">diff_sq</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span><span class="o">.</span><span class="n">compute</span><span class="p">())</span>
+</pre></div>
+<p>This is necessary because Dask uses &quot;lazy evaluation&quot; by default, and only computes results when you tell it to.</p>
+</div>
+<div class="section" id="splitting-dataframe-into-train-and-test-sets">
+<h2>Splitting Dataframe into Train and Test Sets</h2>
+<p>Splitting the Pandas dataframe:</p>
+<div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">train_test_split</span>
+<span class="n">df_train_champaign</span><span class="p">,</span> <span class="n">df_test_champaign</span> <span class="o">=</span> <span class="n">train_test_split</span><span class="p">(</span><span class="n">df_rev_champaign</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">)</span>
+</pre></div>
+<p>Splitting the Dask dataframe:</p>
+<div class="highlight"><pre><span></span><span class="n">df_train</span><span class="p">,</span> <span class="n">df_test</span> <span class="o">=</span> <span class="n">df_rev</span><span class="o">.</span><span class="n">random_split</span><span class="p">([</span><span class="mf">0.8</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">],</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+<p>Unfortunately we can't use Scikit-learn on Dask dataframes, but a lot of the essential capabilities of Scikit-learn are implemented in Dask, or Dask compatible libraries.</p>
+</div>
+<div class="section" id="computing-baselines">
+<h2>Computing Baselines</h2>
+<p>Now here's the exciting part: the actual baseline computation uses the exact same code no matter whether it's a Dask or Pandas dataframe. Here's the function that computes the baseline predictions:</p>
+<div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">compute_baseline_rmse</span><span class="p">(</span><span class="n">df_train</span><span class="p">,</span> <span class="n">df_test</span><span class="p">,</span> <span class="n">beta_u</span><span class="p">,</span> <span class="n">beta_i</span><span class="p">,</span> <span class="n">rmse_func</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    df_train and df_test are either Pandas or Dask dataframes</span>
+<span class="sd">    that must contain the columns &#39;user_id&#39;, &#39;business_id&#39;, and &#39;stars&#39;.</span>
+<span class="sd">    beta_u and beta_i are user and business damping factors, respectively.</span>
+<span class="sd">    rmse_func is a function that computes the RMSE of the prediction</span>
+<span class="sd">    and takes Pandas or Dask Series objects, depending on whether</span>
+<span class="sd">    df_train and df_test are Pandas or Dask Dataframes.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Get mean rating of all training ratings</span>
+    <span class="n">train_mean</span> <span class="o">=</span> <span class="n">df_train</span><span class="p">[</span><span class="s1">&#39;stars&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">()</span>
+    <span class="c1"># Get dataframe of b_u part of baseline for each user id</span>
+    <span class="n">user_group</span> <span class="o">=</span> <span class="n">df_train</span><span class="p">[[</span><span class="s1">&#39;user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;stars&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;user_id&#39;</span><span class="p">)</span>
+    <span class="n">df_train_user</span> <span class="o">=</span> <span class="n">user_group</span><span class="o">.</span><span class="n">agg</span><span class="p">([</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="s1">&#39;count&#39;</span><span class="p">])[</span><span class="s1">&#39;stars&#39;</span><span class="p">]</span>
+    <span class="n">df_train_user</span><span class="p">[</span><span class="s1">&#39;b_u&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="n">df_train_user</span><span class="p">[</span><span class="s1">&#39;sum&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">train_mean</span> <span class="o">*</span> <span class="n">df_train_user</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">])</span>
+    <span class="n">df_train_user</span><span class="p">[</span><span class="s1">&#39;b_u&#39;</span><span class="p">]</span> <span class="o">/=</span> <span class="p">(</span><span class="n">df_train_user</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">beta_u</span><span class="p">)</span>
+    <span class="c1"># Create column of b_u values corresponding to the user who made the review</span>
+    <span class="n">df_train</span> <span class="o">=</span> <span class="n">df_train</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df_train_user</span><span class="p">[[</span><span class="s1">&#39;b_u&#39;</span><span class="p">]],</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;user_id&#39;</span><span class="p">)</span>
+    <span class="c1"># Add column representing the expression inside the summation part of the b_i equation</span>
+    <span class="n">df_train</span><span class="p">[</span><span class="s1">&#39;b_i_sum&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_train</span><span class="p">[</span><span class="s1">&#39;stars&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">df_train</span><span class="p">[</span><span class="s1">&#39;b_u&#39;</span><span class="p">]</span> <span class="o">-</span> <span class="n">train_mean</span>
+    <span class="c1"># Average over each business to get the actual b_i values for each business</span>
+    <span class="n">bus_group</span> <span class="o">=</span> <span class="n">df_train</span><span class="p">[[</span><span class="s1">&#39;business_id&#39;</span><span class="p">,</span> <span class="s1">&#39;b_i_sum&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">groupby</span><span class="p">(</span><span class="s1">&#39;business_id&#39;</span><span class="p">)</span>
+    <span class="n">df_train_bus</span> <span class="o">=</span> <span class="n">bus_group</span><span class="o">.</span><span class="n">agg</span><span class="p">([</span><span class="s1">&#39;sum&#39;</span><span class="p">,</span> <span class="s1">&#39;count&#39;</span><span class="p">])[</span><span class="s1">&#39;b_i_sum&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">rename</span><span class="p">(</span><span class="n">columns</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;sum&#39;</span><span class="p">:</span> <span class="s1">&#39;b_i&#39;</span><span class="p">})</span>
+    <span class="n">df_train_bus</span><span class="p">[</span><span class="s1">&#39;b_i&#39;</span><span class="p">]</span> <span class="o">/=</span> <span class="n">df_train_bus</span><span class="p">[</span><span class="s1">&#39;count&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">beta_i</span>
+    <span class="c1"># Join b_u and b_i columns to test dataframe</span>
+    <span class="n">df_test</span> <span class="o">=</span> <span class="n">df_test</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df_train_user</span><span class="p">[[</span><span class="s1">&#39;b_u&#39;</span><span class="p">]],</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;user_id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">df_train_user</span><span class="p">[</span><span class="s1">&#39;b_u&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+    <span class="n">df_test</span> <span class="o">=</span> <span class="n">df_test</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">df_train_bus</span><span class="p">[[</span><span class="s1">&#39;b_i&#39;</span><span class="p">]],</span> <span class="n">on</span><span class="o">=</span><span class="s1">&#39;business_id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="n">df_train_bus</span><span class="p">[</span><span class="s1">&#39;b_i&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">mean</span><span class="p">())</span>
+    <span class="c1"># Predict and Compute error</span>
+    <span class="n">df_test</span><span class="p">[</span><span class="s1">&#39;pred&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">df_test</span><span class="p">[</span><span class="s1">&#39;b_u&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">df_test</span><span class="p">[</span><span class="s1">&#39;b_i&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="n">train_mean</span>
+    <span class="n">error</span> <span class="o">=</span> <span class="n">rmse_func</span><span class="p">(</span><span class="n">df_test</span><span class="p">[</span><span class="s1">&#39;stars&#39;</span><span class="p">],</span> <span class="n">df_test</span><span class="p">[</span><span class="s1">&#39;pred&#39;</span><span class="p">])</span>
+    <span class="k">print</span><span class="p">(</span><span class="s1">&#39;Error = {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">error</span><span class="p">))</span>
+</pre></div>
+<p>I call that function using either</p>
+<div class="highlight"><pre><span></span><span class="n">compute_baseline_rmse</span><span class="p">(</span><span class="n">df_train_champaign</span><span class="p">,</span> <span class="n">df_test_champaign</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">rmse_pandas</span><span class="p">)</span>
+</pre></div>
+<p>for the Champaign Pandas dataframes or</p>
+<div class="highlight"><pre><span></span><span class="n">compute_baseline_rmse</span><span class="p">(</span><span class="n">df_train</span><span class="p">,</span> <span class="n">df_test</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">rmse_dask</span><span class="p">)</span>
+</pre></div>
+<p>for the US/Canada Dask dataframes. Note that even relatively simple calculations like these can still take a long time if you're just running on your laptop, especially if you more partitions than necessary.</p>
+</div>
+<div class="section" id="conclusion">
+<h2>Conclusion</h2>
+<p>If you want to do dataframe manipulations or standard machine learning on a dataset that's just a little bigger than the memory you have available, I highly recommend Dask. For more complex computations or bigger datasets, you might want to stick with something fancier like Spark clusters in the cloud.</p>
+</div>
+<div class="section" id="acknowledgments">
+<h2>Acknowledgments</h2>
+<p>Thanks to <a class="reference external" href="http://arielrodriguezromero.com/">Ariel Rodriquez</a> for introducing me to Dask, and thanks to <a class="reference external" href="https://sakura9096.github.io/">Claire Zhang</a> for finding the survey of collaborative filtering systems.</p>
+</div>
+<script type='text/javascript'>if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = 'https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.3/latest.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+            </div>
+            <!-- /.entry-content -->
+    <hr/>
+    <section class="comments" id="comments">
+        <h2>Comments</h2>
+
+        <div id="disqus_thread"></div>
+        <script type="text/javascript">
+            /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+            var disqus_shortname = 'benlindsay'; // required: replace example with your forum shortname
+
+                    var disqus_identifier = 'analyzing-larger-than-memory-data-on-your-laptop';
+                var disqus_url = '/blog/analyzing-larger-than-memory-data-on-your-laptop/';
+
+            var disqus_config = function () {
+                this.language = "en";
+            };
+
+            /* * * DON'T EDIT BELOW THIS LINE * * */
+            (function () {
+                var dsq = document.createElement('script');
+                dsq.type = 'text/javascript';
+                dsq.async = true;
+                dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+            })();
+        </script>
+        <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by
+            Disqus.</a></noscript>
+        <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+
+    </section>
+        </article>
+    </section>
+
+        </div>
+        <div class="col-sm-3" id="sidebar">
+            <aside>
+<div id="aboutme">
+        <p>
+            <img width="100%" class="img-thumbnail" src="/images/profile.jpg"/>
+        </p>
+    <p>
+        
+Hi! I'm Ben. I'm a PhD student at UPenn, data science enthusiast, and
+co-founder of <a href="http://penndsg.com/">Penn Data Science Group</a>.
+I enjoy hacking around with new tools and finding ways to automate things.
+I am an avid Python user and a diehard Vim nerd. I'll be graduating in 2019.
+
+    </p>
+</div><!-- Sidebar -->
+<section class="well well-sm">
+  <ul class="list-group list-group-flush">
+
+<!-- Sidebar/Social -->
+<li class="list-group-item">
+  <h4><i class="fa fa-home fa-lg"></i><span class="icon-label">Social</span></h4>
+  <ul class="list-group" id="social">
+    <li class="list-group-item"><a href="https://github.com/benlindsay"><i class="fa fa-github-square fa-lg"></i> github</a></li>
+    <li class="list-group-item"><a href="https://www.linkedin.com/in/benjlindsay/"><i class="fa fa-linkedin-square fa-lg"></i> linkedin</a></li>
+    <li class="list-group-item"><a href="mailto:benjlindsay+website@gmail.com"><i class="fa fa-envelope fa-lg"></i> email</a></li>
+    <li class="list-group-item"><a href="https://twitter.com/ben_j_lindsay"><i class="fa fa-twitter-square fa-lg"></i> twitter</a></li>
+  </ul>
+</li>
+<!-- End Sidebar/Social -->
+
+<!-- Sidebar/Tag Cloud -->
+<li class="list-group-item">
+  <a href="/tag/"><h4><i class="fa fa-tags fa-lg"></i><span class="icon-label">Tags</span></h4></a>
+  <ul class="list-group " id="tags">
+    <li class="list-group-item tag-0">
+      <a href="/tag/python/">python</a>
+    </li>
+    <li class="list-group-item tag-12">
+      <a href="/tag/recommender-systems/">recommender systems</a>
+    </li>
+    <li class="list-group-item tag-19">
+      <a href="/tag/pandas/">pandas</a>
+    </li>
+    <li class="list-group-item tag-31">
+      <a href="/tag/bash/">bash</a>
+    </li>
+    <li class="list-group-item tag-31">
+      <a href="/tag/productivity/">productivity</a>
+    </li>
+    <li class="list-group-item tag-31">
+      <a href="/tag/jupyter-notebooks/">jupyter notebooks</a>
+    </li>
+    <li class="list-group-item tag-31">
+      <a href="/tag/data-visualization/">data visualization</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/jupyter/">jupyter</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/tmux/">tmux</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/ssh/">ssh</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/seaborn/">seaborn</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/dask/">dask</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/big-data/">big data</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/als-wr/">als-wr</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/machine-learning/">machine learning</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/numpy/">numpy</a>
+    </li>
+    <li class="list-group-item tag-50">
+      <a href="/tag/d3/">d3</a>
+    </li>
+  </ul>
+</li>
+<!-- End Sidebar/Tag Cloud -->
+  </ul>
+</section>
+<!-- End Sidebar -->            </aside>
+        </div>
+    </div>
+</div>
+<!-- End Content Container -->
+
+<footer>
+   <div class="container">
+      <hr>
+      <div class="row">
+         <div class="col-xs-10">&copy; 2018 Ben Lindsay
+            &middot; Powered by <a href="https://github.com/getpelican/pelican-themes/tree/master/pelican-bootstrap3" target="_blank">pelican-bootstrap3</a>,
+            <a href="http://docs.getpelican.com/" target="_blank">Pelican</a>,
+            <a href="http://getbootstrap.com" target="_blank">Bootstrap</a>         </div>
+         <div class="col-xs-2"><p class="pull-right"><i class="fa fa-arrow-up"></i> <a href="#">Back to top</a></p></div>
+      </div>
+   </div>
+</footer>
+<script src="/theme/js/jquery.min.js"></script>
+
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="/theme/js/bootstrap.min.js"></script>
+
+<!-- Enable responsive features in IE8 with Respond.js (https://github.com/scottjehl/Respond) -->
+<script src="/theme/js/respond.min.js"></script>
+
+
+    <!-- Disqus -->
+    <script type="text/javascript">
+        /* * * CONFIGURATION VARIABLES: EDIT BEFORE PASTING INTO YOUR WEBPAGE * * */
+        var disqus_shortname = 'benlindsay'; // required: replace example with your forum shortname
+
+        /* * * DON'T EDIT BELOW THIS LINE * * */
+        (function () {
+            var s = document.createElement('script');
+            s.async = true;
+            s.type = 'text/javascript';
+            s.src = '//' + disqus_shortname + '.disqus.com/count.js';
+            (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+        }());
+    </script>
+    <!-- End Disqus Code -->
+
+<script type="text/javascript">
+jQuery(document).ready(function($) {
+    $("div.collapseheader").click(function () {
+    $header = $(this).children("span").first();
+    $codearea = $(this).children(".input_area");
+    console.log($(this).children());
+    $codearea.slideToggle(500, function () {
+        $header.text(function () {
+            return $codearea.is(":visible") ? "Collapse Code" : "Expand Code";
+        });
+    });
+});
+});
+</script>
+</body>
+</html>

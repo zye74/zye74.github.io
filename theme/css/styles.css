@@ -1,0 +1,101 @@
+/* Hide the `In: []` and `Out: []` garbage from jupyter notebooks */
+.prompt {
+    display: none;
+}
+
+/* Add space below paragraphs that for some reason wasn't there */
+.entry-content p {
+    margin-bottom: 9px;
+}
+
+/* Class to turn off link underline */
+.nounderline, .nounderline:hover {
+    text-decoration: none;
+}
+
+/* Get rid of big padding gap on top after making navbar not sticky */
+html body {
+    padding: 0px;
+}
+
+/* Make header in articles line up with article content */
+#content header {
+    padding-left: 8px;
+    padding-right: 8px;
+}
+
+/* Make left and right padding in navbar match content and
+ * get rid of white border around navbar and rounded corners */
+div.navbar div.navbar-inner {
+    padding-left: 30px;
+    padding-right: 30px;
+    border: 0px;
+    border-radius: 0px;
+}
+
+/* Hacky class to add blank divs for vertical space in html */
+.spacer {
+    height: 10px;
+}
+
+/* Nice padding for article tags */
+button.tag-btn {
+    padding-top: 3px;
+    padding-right: 6px;
+    padding-bottom: 3px;
+    padding-left: 6px;
+    margin-top: 4px;
+    margin-right: 2px;
+    margin-bottom: 4px;
+    margin-left: 2px;
+}
+
+/* Don't let images in articles expand past 100% of container width */
+div.entry-content img {
+    max-width: 100%;
+}
+
+/* Center images from jupyter notebooks */
+.output_wrapper img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Fixes an annoying shift for code cells in jupyter notebooks */
+div.entry-content div.cell {
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+/* Correct a default css thing that keeps jupyter notebook image areas from
+ * expanding all the way to the right */
+div.output_wrapper div.output div.output_area div.output_subarea {
+    max-width: 100%;
+}
+
+/* Center dataframe tables form jupyter notebooks */
+div.output_wrapper div.output_area div.rendered_html table.dataframe {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Set padding around sidebar links to a smaller, more reasonable size */
+#sidebar .nav-list li a {
+    padding-top: 5px;
+    padding-right: 10px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+}
+
+/* Add space below profile pic and set it to fill the width of the sidebar */
+#profile-pic {
+    width: 100%;
+    padding-bottom: 10px;
+}
+
+/* Remove the padding on the right of the sidebar that makes my profile pic not
+ * centered */
+#sidebar ul.nav-list {
+    padding: 0px;
+}

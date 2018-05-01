@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+        <title>Analyzing Larger-than-Memory Data on your Laptop</title>
+        <meta charset="utf-8" />
+
+
+        <!-- Mobile viewport optimized: j.mp/bplateviewport -->
+        <meta name="viewport" content="width=device-width,initial-scale=1, maximum-scale=1">
+
+        <link rel="stylesheet" type="text/css" href="/theme/gumby.css" />
+        <link rel="stylesheet" type="text/css" href="/theme/style.css" />
+        <link rel="stylesheet" type="text/css" href="/theme/pygment.css" />
+
+        <script src="/theme/js/libs/modernizr-2.6.2.min.js"></script>
+
+
+              <script>
+                (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+                ga('create', 'UA-71898636-1', 'auto');
+                ga('send', 'pageview');
+
+              </script>
+
+
+</head>
+
+<body id="index" class="home">
+
+
+    <div class="container">
+
+        <div class="row">
+
+          <header id="banner" class="body">
+              <h1><a href="/">Ben Lindsay <strong></strong></a></h1>
+          </header><!-- /#banner -->
+
+            <div id="navigation" class="navbar row">
+              <a href="#" gumby-trigger="#navigation &gt; ul" class="toggle"><i class="icon-menu"></i></a>
+              <ul class="columns">
+                  <li >
+                      <a href="/">Home</a>
+                  </li>
+            <li class="active"><a href="/blog/">Blog</a></li>
+            <li ><a href="/projects/">Projects</a></li>
+
+              </ul>
+            </div>
+
+<section id="content" class="body">
+
+   <div class="row">
+        <div class="eleven columns">
+
+
+            <header>
+              <h2 class="entry-title">
+                <a href="/drafts/analyzing-larger-than-memory-data-on-your-laptop.html" rel="bookmark"
+                   title="Permalink to Analyzing Larger-than-Memory Data on your Laptop">Analyzing Larger-than-Memory Data on your Laptop</a></h2>
+           
+            </header>
+            <footer class="post-info">
+              <abbr class="published" title="2017-03-10T19:10:00-05:00">
+                Fri 10 March 2017
+              </abbr>
+            </footer><!-- /.post-info -->
+            <div class="spacer"></div>
+            <div class="entry-content">
+              <p>If you want to manipulate and analyze data, and show the results alongside the code that generated them, using <a class="reference external" href="http://pandas.pydata.org/">Pandas</a> dataframes within a <a class="reference external" href="http://jupyter.org/">Jupyter</a> notebook is a great way to do it. But when your dataset is too large to fit in memory on your local computer, your notebook hangs when you try to load the data. But that doesn't necessarily mean you have to leave the comfort of Pandas + Jupyter and go to some cloud-computing platform. An amazing Python library called <a class="reference external" href="http://dask.pydata.org/">Dask</a> lets you do all your Pandas-style dataframe manipulations with just a few simple tweaks so you don't have to worry about Jupyter freezing up.</p>
+<p><a class="reference external" href="http://arielrodriguezromero.com/">Ariel Rodriquez</a> introduced me to Dask during the course of analyzing data to build a recommender system as a part of the <a class="reference external" href="http://penndsg.com/">Penn Data Science Group</a> I co-founded with <a class="reference external" href="http://jennhwang.me/">Jenn Hwang</a>. I found Dask very impressive and convenient right off the bat. I first used it when computing baseline predictions for review scores across a training set of 90% of the US/Canada business reviews provided for the <a class="reference external" href="https://www.yelp.com/dataset_challenge">Yelp Dataset Challenge</a>, containing 3.6 million reviews. Before using Dask, I calculated baseline predictions for just Champaign business reviews, since that is a small subset of the data that fits easily into memory using Pandas dataframes. You can compare my Jupyter notebooks that compute the <a class="reference external" href="https://github.com/benlindsay/yelp-dataset-challenge/blob/master/ben-notebooks/champaign_ratings_baselines.ipynb">Champaign baseline errors</a> with pure Pandas and the <a class="reference external" href="https://github.com/benlindsay/yelp-dataset-challenge/blob/master/ben-notebooks/train_data_baselines.ipynb">US/Canada baseline errors</a> with Dask to see how little needs to change. Or you can just look at the excerpts below.</p>
+<div class="section" id="baseline-prediction-method">
+<h2>Baseline Prediction Method</h2>
+<p>The baseline prediction method I'll show below is one of 4 methods discussed in <a class="reference external" href="http://files.grouplens.org/papers/FnT%20CF%20Recsys%20Survey.pdf">this excellent survey of collaborative filtering recommender systems</a> by Michael Ekstrand1, John Riedl, and Joseph Konstan. The methods are:</p>
+<ol class="arabic simple">
+<li>Predict by user's average rating</li>
+<li>Predict by item's average rating (&quot;items&quot; are businesses in this case)</li>
+<li>Predict by user's and item's average ratings</li>
+<li>Predict by user's and item's average ratings with damping factors</li>
+</ol>
+<p>The 4th method ended up giving the best predictions on both the Champaign data and US/Canada training set. The damping factors make it a sort of Bayesian method that pushes the prediction closer to the average for users or businesses with fewer ratings. The necessary equations are 2.1, 2.4, and 2.5 in the survey linked above.</p>
+<p>Equation 2.1 (<span class="math">\(b_{u,i} = \mu + b_u + b_i\)</span>) essentially says that if we want the baseline prediction for user <span class="math">\(u\)</span>'s rating of item <span class="math">\(i\)</span>, we can sum up the total average <span class="math">\(\mu\)</span>, the offset from the <span class="math">\(\mu\)</span>  corresponding to user <span class="math">\(u\)</span> (<span class="math">\(b_u\)</span>), and the offset from <span class="math">\(\mu + b_u\)</span> corresponding to item <span class="math">\(i\)</span> (<span class="math">\(b_i\)</span>).</p>
+<p>The equations for <span class="math">\(b_u\)</span> and <span class="math">\(b_i\)</span> are</p>
+<div class="math">
+\begin{equation*}
+b_u = \frac{1}{|I_u| + \beta_u}\sum_{i \in I_u} (r_{u,i} - \mu)
+\end{equation*}
+</div>
+<div class="math">
+\begin{equation*}
+b_i = \frac{1}{|U_i| + \beta_i}\sum_{u \in U_i} (r_{u,i} - b_u - \mu)
+\end{equation*}
+</div>
+<p>where <span class="math">\(r_{u_i}\)</span> is the actual rating of item (business) <span class="math">\(i\)</span> given by user <span class="math">\(u\)</span>, <span class="math">\(I_u\)</span> is the set of items rated by user <span class="math">\(u\)</span>, and <span class="math">\(U_i\)</span> is the set of users who rated business <span class="math">\(i\)</span>.</p>
+</div>
+<div class="section" id="loading-data">
+<h2>Loading Data</h2>
+<p>First, let's compare the data loading process for the small and large datasets. In both cases, the data are in the form of a single file with one line of JSON data for each review. To load the Champaign data using Pandas, it</p>
+</div>
+<div class="section" id="champaign-baselines">
+<h2>Champaign Baselines</h2>
+<p>Here's how I implemented those equations for the small Champaign dataset using Pandas (the full Jupyter notebook is <a class="reference external" href="https://github.com/benlindsay/yelp-dataset-challenge/blob/master/ben-notebooks/champaign_ratings_baselines.ipynb">here</a>):</p>
+<div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="kn">as</span> <span class="nn">pd</span>
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">from</span> <span class="nn">sklearn.metrics</span> <span class="kn">import</span> <span class="n">mean_squared_error</span>
+<span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">KFold</span>
+</pre></div>
+</div>
+<script type='text/javascript'>if (!document.getElementById('mathjaxscript_pelican_#%@#$@#')) {
+    var align = "center",
+        indent = "0em",
+        linebreak = "false";
+
+    if (false) {
+        align = (screen.width < 768) ? "left" : align;
+        indent = (screen.width < 768) ? "0em" : indent;
+        linebreak = (screen.width < 768) ? 'true' : linebreak;
+    }
+
+    var mathjaxscript = document.createElement('script');
+    var location_protocol = (false) ? 'https' : document.location.protocol;
+    if (location_protocol !== 'http' && location_protocol !== 'https') location_protocol = 'https:';
+    mathjaxscript.id = 'mathjaxscript_pelican_#%@#$@#';
+    mathjaxscript.type = 'text/javascript';
+    mathjaxscript.src = location_protocol + '//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML';
+    mathjaxscript[(window.opera ? "innerHTML" : "text")] =
+        "MathJax.Hub.Config({" +
+        "    config: ['MMLorHTML.js']," +
+        "    TeX: { extensions: ['AMSmath.js','AMSsymbols.js','noErrors.js','noUndefined.js'], equationNumbers: { autoNumber: 'AMS' } }," +
+        "    jax: ['input/TeX','input/MathML','output/HTML-CSS']," +
+        "    extensions: ['tex2jax.js','mml2jax.js','MathMenu.js','MathZoom.js']," +
+        "    displayAlign: '"+ align +"'," +
+        "    displayIndent: '"+ indent +"'," +
+        "    showMathMenu: true," +
+        "    messageStyle: 'normal'," +
+        "    tex2jax: { " +
+        "        inlineMath: [ ['\\\\(','\\\\)'] ], " +
+        "        displayMath: [ ['$$','$$'] ]," +
+        "        processEscapes: true," +
+        "        preview: 'TeX'," +
+        "    }, " +
+        "    'HTML-CSS': { " +
+        "        styles: { '.MathJax_Display, .MathJax .mo, .MathJax .mi, .MathJax .mn': {color: 'inherit ! important'} }," +
+        "        linebreaks: { automatic: "+ linebreak +", width: '90% container' }," +
+        "    }, " +
+        "}); " +
+        "if ('default' !== 'default') {" +
+            "MathJax.Hub.Register.StartupHook('HTML-CSS Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax['HTML-CSS'].FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+            "MathJax.Hub.Register.StartupHook('SVG Jax Ready',function () {" +
+                "var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;" +
+                "VARIANT['normal'].fonts.unshift('MathJax_default');" +
+                "VARIANT['bold'].fonts.unshift('MathJax_default-bold');" +
+                "VARIANT['italic'].fonts.unshift('MathJax_default-italic');" +
+                "VARIANT['-tex-mathit'].fonts.unshift('MathJax_default-italic');" +
+            "});" +
+        "}";
+    (document.body || document.getElementsByTagName('head')[0]).appendChild(mathjaxscript);
+}
+</script>
+            </div><!-- /.entry-content -->
+            <div class="comments">
+              <h3>Comments</h3>
+              <div id="disqus_thread"></div>
+              <script type="text/javascript">
+                var disqus_identifier = "drafts/analyzing-larger-than-memory-data-on-your-laptop.html";
+                (function() {
+                var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+                dsq.src = 'https://benlindsay.disqus.com/embed.js';
+                (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+                })();
+              </script>
+            </div>
+
+
+        </div><!-- /.eleven.columns -->
+
+<div class="three columns">
+
+<!-- <h4>Pages</h4> -->
+
+ <!-- <ul> -->
+ <!--   -->
+ <!--      <li><a href="/blog/">Blog</a></li> -->
+ <!--   -->
+ <!--      <li><a href="/projects/">Projects</a></li> -->
+ <!--   -->
+ <!--   -->
+ <!--     -->
+ <!--   -->
+ <!--  </ul> -->
+
+<!-- <h4>Categories</h4> -->
+<!--  -->
+<!-- <ul class="blank"> -->
+<!-- 	 -->
+<!-- 		<li><a href="/blog/">Blog</a></li> -->
+<!-- 	 -->
+<!-- 		<li><a href="/projects/">Projects</a></li> -->
+<!-- 	 -->
+<!-- </ul> -->
+<!--  -->
+
+<div class="smallspacer"></div>
+<section id="sidebar-icons">
+  <span class="fa-stack fa-lg">
+    <a href="mailto:benjlindsay@gmail.com">
+      <i class="fa fa-envelope-square fa-stack-2x"></i>
+    </a>
+  </span>
+  <span class="fa-stack fa-lg">
+    <a href="https://www.linkedin.com/in/benjlindsay">
+      <i class="fa fa-linkedin-square fa-stack-2x"></i>
+    </a>
+  </span>
+  <span class="fa-stack fa-lg">
+    <a href="https://github.com/benlindsay">
+      <i class="fa fa-github-square fa-stack-2x"></i>
+    </a>
+  </span>
+  <span class="fa-stack fa-lg">
+    <a href="http://penndsg.com/">
+      <!-- <img style="display: inline-block; margin-top: 2px; margin-left: 4px" -->
+      <!--      src="/images/pdsg_black_and_white.svg" -->
+      <!--      alt="Penn Data Science Group" height=40px width=40px> -->
+      <svg xmlns="http://www.w3.org/2000/svg" width="40px" height="40px"
+           viewBox="0 0 800 800" preserveAspectRatio="xMidYMid meet"
+           id="pdsg-logo" style="margin-top: 2px; margin-left: 4px">
+        <style>
+          .a{fill:#444;}
+          .b{fill:#fff;}
+        </style>
+        <metadata class="undefined"></metadata>
+        <rect width="800" height="800" rx="160" ry="160" class="a"/>
+        <g transform="matrix(0.1 0 0 -0.1 49.95 762.85737)" class="b">
+          <path d="m600 5213c0-1603 2-1651 45-1906 123-712 482-1366 1067-1943 268-265 496-449 806-651 370-240 791-436 967-450 64-5 82-2 195 36 278 93 664 308 1016 565 368 270 749 644 995 976 328 444 549 926 644 1408 61 306 58 215 62 1925l4 1567-2901 0-2900 0zm5717-925c-4-688-8-752-62-1020-56-282-173-612-304-858l-40-75-1 538 0 537-415 0-415 0 0-1064 0-1063-83-72-82-71-3 510-2 510-415 0-415 0 0-798 0-798-75-37c-42-20-80-37-85-37-7 0-10 594-10 1705l0 1705-410 0-410 0 0-1705c0-938-2-1705-5-1705-3 0-41 18-85 40l-80 40 0 2070 0 2070-415 0-415 0-2-1790-3-1790-82 71-83 70 0 765 0 764-415 0-415 0-2-247-3-248-52 100c-115 223-216 501-271 746-70 307-82 483-82 1222l0 557 2821 0 2821 0z" class="b"/>
+          <path d="m2525 5630c-38-15-48-38-50-115l-3-75 40 0c69 0 178 99 153 140-7 11-99 60-112 59-4 0-17-4-28-9z" class="b"/>
+        </g>
+      </svg>
+    </a>
+  </span>
+  <!-- <span class="fa-stack fa-lg"> -->
+  <!--   <a href="https://bitbucket.org/benlindsay"> -->
+  <!--     <i class="fa fa-bitbucket-square fa-stack-2x"></i> -->
+  <!--   </a> -->
+  <!-- </span> -->
+</section>
+
+<h4>Tags</h4>
+  <ul class="blank">
+    <li class="tag-1">
+      <a href="/tag/python/">python</a>
+(3)    </li>
+    <li class="tag-50">
+      <a href="/tag/recommender-systems/">recommender systems</a>
+(1)    </li>
+    <li class="tag-50">
+      <a href="/tag/als-wr/">als-wr</a>
+(1)    </li>
+    <li class="tag-50">
+      <a href="/tag/productivity/">productivity</a>
+(1)    </li>
+    <li class="tag-50">
+      <a href="/tag/data-visualization/">data visualization</a>
+(1)    </li>
+    <li class="tag-50">
+      <a href="/tag/machine-learning/">machine learning</a>
+(1)    </li>
+    <li class="tag-50">
+      <a href="/tag/numpy/">numpy</a>
+(1)    </li>
+    <li class="tag-50">
+      <a href="/tag/d3/">d3</a>
+(1)    </li>
+    <li class="tag-50">
+      <a href="/tag/bash/">bash</a>
+(1)    </li>
+</ul>
+
+
+</div> </div><!-- /.row -->
+
+
+</section>
+
+       </div><!-- /.row -->
+    </div><!-- /.container -->
+
+
+       <div class="container.nopad bg">
+
+    
+        <footer id="credits" class="row">
+          <div class="seven columns left-center">
+
+                   <address id="about" class="vcard body">
+                    Proudly powered by <a href="http://getpelican.com/">Pelican</a>,
+                    which takes great advantage of <a href="http://python.org">Python</a>.
+                    <br />
+                    Based on the <a target="_blank" href="http://gumbyframework.com">Gumby Framework</a>
+                    </address>
+          </div>
+
+
+          <div class="seven columns">
+            <div class="row">
+              <ul class="socbtns">
+
+
+
+
+
+              </ul>
+            </div>
+          </div>
+        </footer>
+
+    </div>
+
+
+<script type="text/javascript">
+    var disqus_shortname = 'benlindsay';
+    (function () {
+        var s = document.createElement('script'); s.async = true;
+        s.type = 'text/javascript';
+        s.src = 'http://' + disqus_shortname + '.disqus.com/count.js';
+        (document.getElementsByTagName('HEAD')[0] || document.getElementsByTagName('BODY')[0]).appendChild(s);
+    }());
+</script>
+  <script src="/theme/js/libs/jquery-1.9.1.min.js"></script>
+  <script src="/theme/js/libs/gumby.min.js"></script>
+  <script src="/theme/js/plugins.js"></script>
+</body>
+</html>
